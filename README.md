@@ -1,2 +1,2 @@
 # crossDomainRecommenderSystem
-Mini project 
+Mini project on Cross Domain Recommender System
