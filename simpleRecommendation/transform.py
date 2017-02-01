@@ -80,15 +80,6 @@ def sim_pearson(prefs,p1,p2):
 	r=num/den
 	return r
 
-
-# for person1 in critics:
-# 	for person2 in critics:
-# 		#if person1!=person2:
-# 			print person1+"  "+person2+":",
-# 			print sim_distance(critics,person1,person2),
-# 			print sim_pearson(critics,person1,person2)
-
-
 def top_matches(critics, person, n=5, sim=sim_pearson):
 	li=[(sim(critics,person,other),other) for other in critics if other!=person]
 
@@ -96,8 +87,6 @@ def top_matches(critics, person, n=5, sim=sim_pearson):
 	li.reverse()
 
 	return li[0:n]				#return only first n items
-
-#print top_matches(critics,'Toby',n=3);
 
 def transformPrefs(prefs):
 	result={}
@@ -110,43 +99,5 @@ def transformPrefs(prefs):
 	
 	return result
 
-
-
-# Gets recommendations for a person by using a weighted average
-# of every other user's rankings
-def getRecommendations(prefs,person,similarity=sim_pearson):
-
-	totals={}
-	simSums={}
-
-	for other in prefs:
-		# don't compare me to myself
-		if other==person:
-			continue
-		sim=similarity(prefs,person,other)
-
-		# ignore scores of zero or lower
-		if sim<=0: 
-			continue
-
-		for item in prefs[other]:
-			# only score movies I haven't seen yet
-			if item not in prefs[person]:								# or prefs[person][item]==0:
-				# Similarity * Score
-				totals.setdefault(item,0)
-				totals[item]+=prefs[other][item]*sim
-				# Sum of similarities
-				simSums.setdefault(item,0)
-				simSums[item]+=sim
-				# Create the normalized list
-
-	rankings=[(total/simSums[item],item) for item,total in totals.items()]
-	# Return the sorted list
-	rankings.sort()
-	rankings.reverse()
-
-	return rankings
-
-
-print getRecommendations(critics, 'Toby')
-print getRecommendations(critics, 'Toby', sim_distance)
+movies=transformPrefs(critics)
+print top_matches(movies,'Superman Returns');

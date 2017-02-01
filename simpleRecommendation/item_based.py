@@ -148,5 +148,28 @@ def getRecommendations(prefs,person,similarity=sim_pearson):
 	return rankings
 
 
-print getRecommendations(critics, 'Toby')
-print getRecommendations(critics, 'Toby', sim_distance)
+# print getRecommendations(critics, 'Toby')
+# print getRecommendations(critics, 'Toby', sim_distance)
+
+
+def calculateSimilarItems(prefs,n=10):
+	# Create a dictionary of items showing which other items they are most similar to
+	result={}
+
+	# Invert the preference matrix to be item-centric
+	itemPrefs=transformPrefs(prefs)
+
+	c=0
+	for item in itemPrefs:
+		# Status updates for large datasets
+		c+=1
+		if c%100==0:
+			print "%d / %d" % (c,len(itemPrefs))
+
+		# find the most similar items to this one
+		scores=top_matches(itemPrefs,item,n=n,sim=sim_distance)
+		result[item]=scores
+
+	return result
+
+print calculateSimilarItems(critics)
