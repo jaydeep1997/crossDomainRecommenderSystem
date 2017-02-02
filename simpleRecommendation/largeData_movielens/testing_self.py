@@ -182,7 +182,7 @@ def getRecommendedItems(prefs,itemMatch,user):
 def loadMovieLens(path='./movielens', file='/u1.base'):
 	# Get movie titles
 	movies={}
-	for line in open(path+'/u.item',encoding='latin-1'):
+	for line in open(path+"/u.item",encoding='latin-1'):
 		(id,title)=line.split('|')[0:2]
 		movies[id]=title
 
@@ -196,10 +196,10 @@ def loadMovieLens(path='./movielens', file='/u1.base'):
 
 
 if __name__=='__main__':
-	trainPrefs = loadMovieLens()
+	trainPrefs = loadMovieLens(file="/u1.base")
 	testPrefs = loadMovieLens(file='/u1.test')
 	
-	
+	final_accu=[]
 	for user in testPrefs:
 		pred = getRecommendations(trainPrefs,user)
 		count=-1
@@ -208,21 +208,18 @@ if __name__=='__main__':
 			preds[item]=rating
 			# print movies[item],rating,item
 		accuracies=[]
+		
 		for movie in testPrefs[user]:
-			if not movie in preds:																	#doubt
+			if not movie in preds:
 				continue 
 			actualRating = testPrefs[user][movie]
 			predcitedRating = preds[movie]
-			diff = fabs(fabs(predcitedRating) - fabs(actualRating))									#doubt
+			diff = fabs(fabs(predcitedRating) - fabs(actualRating))
 			#print (predcitedRating,actualRating,diff)
-			accu = float(diff)/actualRating
-			if accu > 1:																			#doubt
-				continue
-			accuracies.append(1 - accu)																#doubt
-		print ((sum(accuracies)/len(accuracies))*100)												#doubt
+			accuracies.append(1-diff/5.0)
+			final_accu.append(1-diff/5.0)
+			
+		print ((sum(accuracies)/len(accuracies))*100)
 
-#movies,prefs=loadMovieLens(file='/u1.base')
-#testPrefs = loadMovieLens(file='/u1.test')
-
-
+	print ("accuracy=%lf" % ((sum(final_accu)/len(final_accu))*100))
 
