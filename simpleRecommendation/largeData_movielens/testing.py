@@ -1,32 +1,5 @@
 from math import sqrt
 
-# A dictionary of movie critics and their ratings of a small set of movies
-critics={'Lisa Rose': {'Lady in the Water': 2.5, 'Snakes on a Plane': 3.5,
-'Just My Luck': 3.0, 'Superman Returns': 3.5, 'You, Me and Dupree': 2.5,
-'The Night Listener': 3.0},
-
-'Gene Seymour': {'Lady in the Water': 3.0, 'Snakes on a Plane': 3.5,
-'Just My Luck': 1.5, 'Superman Returns': 5.0, 'The Night Listener': 3.0,
-'You, Me and Dupree': 3.5},
-
-'Michael Phillips': {'Lady in the Water': 2.5, 'Snakes on a Plane': 3.0,
-'Superman Returns': 3.5, 'The Night Listener': 4.0},
-
-'Claudia Puig': {'Snakes on a Plane': 3.5, 'Just My Luck': 3.0,
-'The Night Listener': 4.5, 'Superman Returns': 4.0,
-'You, Me and Dupree': 2.5},
-
-'Mick LaSalle': {'Lady in the Water': 3.0, 'Snakes on a Plane': 4.0,
-'Just My Luck': 2.0, 'Superman Returns': 3.0, 'The Night Listener': 3.0,
-'You, Me and Dupree': 2.0},
-
-'Jack Matthews': {'Lady in the Water': 3.0, 'Snakes on a Plane': 4.0,
-'The Night Listener': 3.0, 'Superman Returns': 5.0, 'You, Me and Dupree': 3.5},
-
-'Toby': {'Snakes on a Plane':4.5,'You, Me and Dupree':1.0,'Superman Returns':4.0}}
-
-#print critics['Toby']
-
 # Returns a distance-based similarity score for person1 and person2
 def sim_distance(prefs,person1,person2):
 	#get the shared items
@@ -152,10 +125,64 @@ def getRecommendations(prefs,person,similarity=sim_pearson):
 # print getRecommendations(critics, 'Toby', sim_distance)
 
 
-def loadMovieLens(path='/home/jaydeep/Desktop/Mini_project/python_code/movielens'):
+def calculateSimilarItems(prefs,n=10):
+	# Create a dictionary of items showing which other items they are most similar to
+	result={}
+
+	# Invert the preference matrix to be item-centric
+	itemPrefs=transformPrefs(prefs)
+
+	c=0
+	for item in itemPrefs:
+		# Status updates for large datasets
+		c+=1
+		if c%100==0:
+			print ("%d / %d" % (c,len(itemPrefs)))
+
+		# find the most similar items to this one
+		scores=top_matches(itemPrefs,item,n=n,sim=sim_distance)
+		result[item]=scores
+
+	return result
+
+#print (calculateSimilarItems(critics))
+
+#get reommendation of item(movies) for a person 
+def getRecommendedItems(prefs,itemMatch,user):
+	userRatings=prefs[user]
+	scores={}
+	totalSim={}
+	
+	# Loop over items rated by this user
+	for (item,rating) in userRatings.items():
+		# Loop over items similar to this one
+		for (similarity,item2) in itemMatch[item]:
+			# Ignore if this user has already rated this item
+			if item2 in userRatings:
+				continue
+			
+			# Weighted sum of rating times similarity
+			scores.setdefault(item2,0)
+			scores[item2]+=similarity*rating
+			
+			# Sum of all the similarities
+			totalSim.setdefault(item2,0)
+			totalSim[item2]+=similarity
+	
+	# Divide each total score by total weighting to get an average
+	rankings=[(score/totalSim[item],item) for item,score in scores.items()]
+	
+	# Return the rankings from highest to lowest
+	rankings.sort()
+	rankings.reverse()
+	
+	return rankings
+
+
+def loadMovieLens(path='/home/jaydeep/Desktop/Mini_project/crossDomainRecommenderSystem/simpleRecommendation/largeData_movielens/movielens'):
 	# Get movie titles
 	movies={}
-	for line in open(path+'/u.item'):
+	for line in open(path+'/u.item',encoding='latin-1'):
 		(id,title)=line.split('|')[0:2]
 		movies[id]=title
 
@@ -168,9 +195,7 @@ def loadMovieLens(path='/home/jaydeep/Desktop/Mini_project/python_code/movielens
 	return prefs
 
 prefs=loadMovieLens()
-#print prefs['87']
-#print getRecommendations(prefs, '87')[0:10]
+itemsim=calculateSimilarItems(prefs,n=10)
 
-prefs1=transformPrefs(prefs)
-print top_matches(prefs1,'Toy Story (1995)',50);
-#print getRecommendations(prefs1,'Toy Story (1995)')
+
+
