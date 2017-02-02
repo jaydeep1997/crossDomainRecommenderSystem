@@ -100,4 +100,4 @@ def transformPrefs(prefs):
 	return result
 
 movies=transformPrefs(critics)
-print top_matches(movies,'Superman Returns');
+print (top_matches(movies,'Superman Returns'))

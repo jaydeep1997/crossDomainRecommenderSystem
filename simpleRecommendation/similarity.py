@@ -97,4 +97,4 @@ def top_matches(critics, person, n=5, sim=sim_pearson):
 
 	return li[0:n]				#return only first n items
 
-print top_matches(critics,'Toby',n=3);
+print (top_matches(critics,'Toby',n=3))

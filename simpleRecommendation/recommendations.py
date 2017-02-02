@@ -148,5 +148,5 @@ def getRecommendations(prefs,person,similarity=sim_pearson):
 	return rankings
 
 
-print getRecommendations(critics, 'Toby')
-print getRecommendations(critics, 'Toby', sim_distance)
+print (getRecommendations(critics, 'Toby'))
+print (getRecommendations(critics, 'Toby', sim_distance))
