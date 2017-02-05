@@ -1,4 +1,5 @@
-from math import *
+from math import sqrt
+import ast
 
 # Returns a distance-based similarity score for person1 and person2
 def sim_distance(prefs,person1,person2):
@@ -179,47 +180,43 @@ def getRecommendedItems(prefs,itemMatch,user):
 	return rankings
 
 
-def loadMovieLens(path='./movielens', file='/u1.base'):
+def loadMovieLens(path='..'):
 	# Get movie titles
 	movies={}
-	for line in open(path+"/u.item",encoding='latin-1'):
-		(id,title)=line.split('|')[0:2]
-		movies[id]=title
-
+	i=0
+	for line in open(path+'/movies.csv',encoding='latin-1'):
+		(id,title)=line.split(',')[0:2]
+		if(i==1):
+			movies[id]=title
+		i=1
+	
 	# Load data
 	prefs={}
-	for line in open(path+file):
-		(user,movieid,rating,ts)=line.split('\t')
+	i=0
+	for line in open(path+'/ratings.csv'):
+		(user,movieid,rating,ts)=line.split(',')
 		prefs.setdefault(user,{})
-		prefs[user][movies[movieid]]=float(rating)
+		if(i==1):
+			prefs[user][movies[movieid]]=float(rating)
+		i=1
+	
 	return prefs
 
+prefs=loadMovieLens()
+#1.txt contains: itemsim=calculateSimilarItems(prefs,n=10), So no need to calculate it again
+with open('./1.txt', 'r') as myfile:
+    st=myfile.read().replace('\n', '')								#st is a string st="{1:2}"
+itemsim=ast.literal_eval(st)										#converting string into dictionary itemsim={1:2}
+#print (itemsim)
+#print(getRecommendedItems(prefs,itemsim,'87')[0:30])
 
-if __name__=='__main__':
-	trainPrefs = loadMovieLens(file="/u1.base")
-	testPrefs = loadMovieLens(file='/u1.test')
-	
-	final_accu=[]
-	for user in testPrefs:
-		pred = getRecommendations(trainPrefs,user)
-		count=-1
-		preds={}
-		for rating,item in pred:
-			preds[item]=rating
-			# print movies[item],rating,item
-		accuracies=[]
-		
-		for movie in testPrefs[user]:
-			if not movie in preds:
-				continue 
-			actualRating = testPrefs[user][movie]
-			predcitedRating = preds[movie]
-			diff = fabs(fabs(predcitedRating) - fabs(actualRating))
-			#print (predcitedRating,actualRating,diff)
-			accuracies.append(1-diff/5.0)
-			final_accu.append(1-diff/5.0)
-			
-		print ((sum(accuracies)/len(accuracies))*100)
-
-	print ("accuracy=%lf" % ((sum(final_accu)/len(final_accu))*100))
+user={}
+for line in open("../user.txt"):
+	(id,name)=line.split(",")
+	user[id]=name
+print(user['1001'])
+print(getRecommendedItems(prefs,itemsim,'1001')[0:30])
+print("\n")
+print(user['1003'])
+print(getRecommendedItems(prefs,itemsim,'1003')[0:30])
 

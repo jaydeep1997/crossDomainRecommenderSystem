@@ -1,4 +1,4 @@
-from math import sqrt
+from math import *
 
 # Returns a distance-based similarity score for person1 and person2
 def sim_distance(prefs,person1,person2):
@@ -179,24 +179,48 @@ def getRecommendedItems(prefs,itemMatch,user):
 	return rankings
 
 
-def loadMovieLens(path='/home/jaydeep/Desktop/Mini_project/crossDomainRecommenderSystem/simpleRecommendation/largeData_movielens/movielens'):
+def loadMovieLens(path='./movielens', file='/u1.base'):
 	# Get movie titles
 	movies={}
-	for line in open(path+'/u.item',encoding='latin-1'):
+	for line in open(path+"/u.item",encoding='latin-1'):
 		(id,title)=line.split('|')[0:2]
 		movies[id]=title
 
 	# Load data
 	prefs={}
-	for line in open(path+'/u.data'):
+	for line in open(path+file):
 		(user,movieid,rating,ts)=line.split('\t')
 		prefs.setdefault(user,{})
 		prefs[user][movies[movieid]]=float(rating)
 	return prefs
 
-prefs=loadMovieLens()
-itemsim=calculateSimilarItems(prefs,n=10)
-#print (itemsim)
 
-print(getRecommendedItems(prefs,itemsim,'87')[0:30])
+if __name__=='__main__':
+	trainPrefs = loadMovieLens(file="/u1.base")
+	testPrefs = loadMovieLens(file='/u1.test')
+	
+	final_err=[]
+	for user in testPrefs:
+		pred = getRecommendations(trainPrefs,user)
+		count=-1
+		preds={}
+		for rating,item in pred:
+			preds[item]=rating
+			# print movies[item],rating,item
+		error=[]
+		
+		for movie in testPrefs[user]:
+			if not movie in preds:
+				continue 
+			actualRating = testPrefs[user][movie]
+			predcitedRating = preds[movie]
+			diff = fabs(fabs(predcitedRating) - fabs(actualRating))
+			#print (predcitedRating,actualRating,diff)
+			error.append(diff)
+			final_err.append(diff)
+			
+			
+		print (sum(error)/len(error))
+
+	print ("MAE=%lf" % (sum(final_err)/len(final_err)))
 

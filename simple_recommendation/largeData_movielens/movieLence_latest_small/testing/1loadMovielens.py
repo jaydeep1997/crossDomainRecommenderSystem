@@ -1,4 +1,4 @@
-from math import *
+from math import sqrt
 
 # Returns a distance-based similarity score for person1 and person2
 def sim_distance(prefs,person1,person2):
@@ -125,104 +125,32 @@ def getRecommendations(prefs,person,similarity=sim_pearson):
 # print getRecommendations(critics, 'Toby', sim_distance)
 
 
-def calculateSimilarItems(prefs,n=10):
-	# Create a dictionary of items showing which other items they are most similar to
-	result={}
-
-	# Invert the preference matrix to be item-centric
-	itemPrefs=transformPrefs(prefs)
-
-	c=0
-	for item in itemPrefs:
-		# Status updates for large datasets
-		c+=1
-		if c%100==0:
-			print ("%d / %d" % (c,len(itemPrefs)))
-
-		# find the most similar items to this one
-		scores=top_matches(itemPrefs,item,n=n,sim=sim_distance)
-		result[item]=scores
-
-	return result
-
-#print (calculateSimilarItems(critics))
-
-#get reommendation of item(movies) for a person 
-def getRecommendedItems(prefs,itemMatch,user):
-	userRatings=prefs[user]
-	scores={}
-	totalSim={}
-	
-	# Loop over items rated by this user
-	for (item,rating) in userRatings.items():
-		# Loop over items similar to this one
-		for (similarity,item2) in itemMatch[item]:
-			# Ignore if this user has already rated this item
-			if item2 in userRatings:
-				continue
-			
-			# Weighted sum of rating times similarity
-			scores.setdefault(item2,0)
-			scores[item2]+=similarity*rating
-			
-			# Sum of all the similarities
-			totalSim.setdefault(item2,0)
-			totalSim[item2]+=similarity
-	
-	# Divide each total score by total weighting to get an average
-	rankings=[(score/totalSim[item],item) for item,score in scores.items()]
-	
-	# Return the rankings from highest to lowest
-	rankings.sort()
-	rankings.reverse()
-	
-	return rankings
-
-
-def loadMovieLens(path='./movielens', file='/u1.base'):
+def loadMovieLens(path='..'):
 	# Get movie titles
 	movies={}
-	for line in open(path+'/u.item',encoding='latin-1'):
-		(id,title)=line.split('|')[0:2]
-		movies[id]=title
-
+	i=0
+	for line in open(path+'/movies.csv',encoding='latin-1'):
+		(id,title)=line.split(',')[0:2]
+		if(i==1):
+			movies[id]=title
+		i=1
+	
 	# Load data
 	prefs={}
-	for line in open(path+file):
-		(user,movieid,rating,ts)=line.split('\t')
+	i=0
+	for line in open(path+'/ratings.csv'):
+		(user,movieid,rating,ts)=line.split(',')
 		prefs.setdefault(user,{})
-		prefs[user][movies[movieid]]=float(rating)
+		if(i==1):
+			prefs[user][movies[movieid]]=float(rating)
+		i=1
+	
 	return prefs
 
+prefs=loadMovieLens()
+#print (prefs['87'])
+#print (getRecommendations(prefs, '87')[0:10])
 
-if __name__=='__main__':
-	trainPrefs = loadMovieLens()
-	testPrefs = loadMovieLens(file='/u1.test')
-	
-	
-	for user in testPrefs:
-		pred = getRecommendations(trainPrefs,user)
-		count=-1
-		preds={}
-		for rating,item in pred:
-			preds[item]=rating
-			# print movies[item],rating,item
-		accuracies=[]
-		for movie in testPrefs[user]:
-			if not movie in preds:																	#doubt
-				continue 
-			actualRating = testPrefs[user][movie]
-			predcitedRating = preds[movie]
-			diff = fabs(fabs(predcitedRating) - fabs(actualRating))									#doubt
-			#print (predcitedRating,actualRating,diff)
-			accu = float(diff)/actualRating
-			if accu > 1:																			#doubt
-				continue
-			accuracies.append(1 - accu)																#doubt
-		print ((sum(accuracies)/len(accuracies))*100)												#doubt
-
-#movies,prefs=loadMovieLens(file='/u1.base')
-#testPrefs = loadMovieLens(file='/u1.test')
-
-
-
+prefs1=transformPrefs(prefs)
+#print (top_matches(prefs1,'Toy Story (1995)',50))
+print (getRecommendations(prefs1,'Toy Story (1995)'))

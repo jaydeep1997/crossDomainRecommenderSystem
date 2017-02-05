@@ -125,7 +125,61 @@ def getRecommendations(prefs,person,similarity=sim_pearson):
 # print getRecommendations(critics, 'Toby', sim_distance)
 
 
-def loadMovieLens(path='/home/jaydeep/Desktop/Mini_project/crossDomainRecommenderSystem/simpleRecommendation/largeData_movielens/movielens'):
+def calculateSimilarItems(prefs,n=10):
+	# Create a dictionary of items showing which other items they are most similar to
+	result={}
+
+	# Invert the preference matrix to be item-centric
+	itemPrefs=transformPrefs(prefs)
+
+	c=0
+	for item in itemPrefs:
+		# Status updates for large datasets
+		c+=1
+		if c%100==0:
+			print ("%d / %d" % (c,len(itemPrefs)))
+
+		# find the most similar items to this one
+		scores=top_matches(itemPrefs,item,n=n,sim=sim_distance)
+		result[item]=scores
+
+	return result
+
+#print (calculateSimilarItems(critics))
+
+#get reommendation of item(movies) for a person 
+def getRecommendedItems(prefs,itemMatch,user):
+	userRatings=prefs[user]
+	scores={}
+	totalSim={}
+	
+	# Loop over items rated by this user
+	for (item,rating) in userRatings.items():
+		# Loop over items similar to this one
+		for (similarity,item2) in itemMatch[item]:
+			# Ignore if this user has already rated this item
+			if item2 in userRatings:
+				continue
+			
+			# Weighted sum of rating times similarity
+			scores.setdefault(item2,0)
+			scores[item2]+=similarity*rating
+			
+			# Sum of all the similarities
+			totalSim.setdefault(item2,0)
+			totalSim[item2]+=similarity
+	
+	# Divide each total score by total weighting to get an average
+	rankings=[(score/totalSim[item],item) for item,score in scores.items()]
+	
+	# Return the rankings from highest to lowest
+	rankings.sort()
+	rankings.reverse()
+	
+	return rankings
+
+
+def loadMovieLens(path='./movielens'):
 	# Get movie titles
 	movies={}
 	for line in open(path+'/u.item',encoding='latin-1'):
@@ -141,9 +195,7 @@ def loadMovieLens(path='/home/jaydeep/Desktop/Mini_project/crossDomainRecommende
 	return prefs
 
 prefs=loadMovieLens()
-#print (prefs['87'])
-#print (getRecommendations(prefs, '87')[0:10])
+itemsim=calculateSimilarItems(prefs,n=10)
+print (itemsim)
 
-prefs1=transformPrefs(prefs)
-#print (top_matches(prefs1,'Toy Story (1995)',50))
-print (getRecommendations(prefs1,'Toy Story (1995)'))
+print(getRecommendedItems(prefs,itemsim,'87')[0:30])

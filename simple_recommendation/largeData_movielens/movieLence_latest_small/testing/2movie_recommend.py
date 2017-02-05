@@ -1,4 +1,4 @@
-from math import *
+from math import sqrt
 
 # Returns a distance-based similarity score for person1 and person2
 def sim_distance(prefs,person1,person2):
@@ -136,8 +136,8 @@ def calculateSimilarItems(prefs,n=10):
 	for item in itemPrefs:
 		# Status updates for large datasets
 		c+=1
-		if c%100==0:
-			print ("%d / %d" % (c,len(itemPrefs)))
+		#if c%100==0:
+		#	print ("%d / %d" % (c,len(itemPrefs)))
 
 		# find the most similar items to this one
 		scores=top_matches(itemPrefs,item,n=n,sim=sim_distance)
@@ -179,47 +179,32 @@ def getRecommendedItems(prefs,itemMatch,user):
 	return rankings
 
 
-def loadMovieLens(path='./movielens', file='/u1.base'):
+def loadMovieLens(path='..'):
 	# Get movie titles
 	movies={}
-	for line in open(path+"/u.item",encoding='latin-1'):
-		(id,title)=line.split('|')[0:2]
-		movies[id]=title
-
+	i=0
+	for line in open(path+'/movies.csv',encoding='latin-1'):
+		(id,title)=line.split(',')[0:2]
+		if(i==1):
+			movies[id]=title
+		i=1
+	
 	# Load data
 	prefs={}
-	for line in open(path+file):
-		(user,movieid,rating,ts)=line.split('\t')
+	i=0
+	for line in open(path+'/ratings.csv'):
+		(user,movieid,rating,ts)=line.split(',')
 		prefs.setdefault(user,{})
-		prefs[user][movies[movieid]]=float(rating)
+		if(i==1):
+			prefs[user][movies[movieid]]=float(rating)
+		i=1
+	
 	return prefs
 
+prefs=loadMovieLens()
+itemsim=calculateSimilarItems(prefs,n=10)
+print (itemsim)
 
-if __name__=='__main__':
-	trainPrefs = loadMovieLens(file="/u1.base")
-	testPrefs = loadMovieLens(file='/u1.test')
-	
-	final_accu=[]
-	for user in testPrefs:
-		pred = getRecommendations(trainPrefs,user)
-		count=-1
-		preds={}
-		for rating,item in pred:
-			preds[item]=rating
-			# print movies[item],rating,item
-		accuracies=[]
-		
-		for movie in testPrefs[user]:
-			if not movie in preds:
-				continue 
-			actualRating = testPrefs[user][movie]
-			predcitedRating = preds[movie]
-			diff = fabs(fabs(predcitedRating) - fabs(actualRating))
-			#print (predcitedRating,actualRating,diff)
-			accuracies.append(1-diff/5.0)
-			final_accu.append(1-diff/5.0)
-			
-		print ((sum(accuracies)/len(accuracies))*100)
-
-	print ("accuracy=%lf" % ((sum(final_accu)/len(final_accu))*100))
+#print(getRecommendedItems(prefs,itemsim,'87')[0:30])
+#print(getRecommendedItems(prefs,itemsim,'1')[0:30]))
 
